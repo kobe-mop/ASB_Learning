@@ -1,0 +1,32 @@
+Too late ： Ue 没有进行handover或者handover失败，ue重建到其他的cell
+
+
+
+
+1.Ue cat1
+
+	• Timer reset 都是在intitle context setup request 之前发生
+	• 发送intitle ue message,在查询之前，收到dl nas，停止initle ue meesage time, 替换成rrc onlylife time,如果cat1timer 超时，然后ue 能力查询，如果ue 能力是cat1，启动rrc onlylife timer的替换；
+	• intitle ue message timer reset是在收到upl nas（在dl nas 和intitle context setup request之前）进行reset
+	• rrc onlylife timer reset 是在收到dl和upl nas(在intitle context setup request之前)进行reset。
+	
+	
+2.消息的数据包
+
+•     enodeb内部都是SDU
+•     enodeb发给外部(ue mme)都是PDU
+
+
+3.消息类型
+
+(ue---uecall)
+Ue_PDCP_DATA_IND  ue->L1/L2->ubm->uecallp ( ue capability inforamtion) (ue->uecall)
+Ue_PDCP_DATA_REQ  uecallp->ubm->L1/L2->ue ( ue capability enquiry )    (uecall->ue)
+
+(ue---cellrrc)
+Cell_RLC_DATA_IND  ue->L1/L2->ubm->cellrrc ( rrc connection request) (ue->cellrrc)
+Cell_RLC_DATA_REQ  cellrrc->ubm->L1/L2->ue ( rrc connection setup )    (cellrrc->ue)
+
+(mme-uecall)
+STCP_DATA_IND  mme->IP->stcp access->uecallp (intitle context setup request) (mme->uecall)
+STCP_DATA_REQ  uecallp->stcp access->IP->mme (intitle context setup response) (uecall->mme)
