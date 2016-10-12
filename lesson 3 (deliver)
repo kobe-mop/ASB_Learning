@@ -1,0 +1,266 @@
+	1. 建stream
+ct mkstream -in enb_lr16_callp_CR@/enba_pvob -baseline <baselinename>  < your son-streamname>
+ 
+eg.
+	baselinename=B_ENB_LR15_CALLP_CR_LR151_150810.2@/enba_pvob 
+	your son-streamname =shengxiz_enb_lr16.2_callp_CR@/enba_pvob（自己取）
+	 
+	Ø 如何找某stream的recommended baseline：
+	方法1：ct lsstream –l  <stream>
+	        找到列出的recommended baseline
+	方法2：在Rational ClearCse Explorer的Toolbox—>UCM—>Project Explorer里找到该Stream，右键Recommended baseline
+    
+2.建view
+  /nfs/tools/FDD/bin/MakeDynViewForFDD  < your son-streamname > 
+or 
+/nfs/tools/tddtools/MakeDynViewOnServerForTDD < your son-streamname >
+ 
+3.进入view
+方法1：ct setview <your view name>
+方法2：vs              //select your view ß快捷方式
+    
+4.建activity
+  ct mkact
+ 
+5.checkout并修改代码
+	Ø Checkout之前—>要知道修改的是哪个文件。
+	PROP :如果做的是propagation，即将低版本（eg 14.3）的修改搬移到高版本（eg 15.1）。只要找到做低版本的人的activity，看他修改了哪些文件，我们照着修改就行。
+	l 如何找到之前修改的人的activity
+	(1)登陆DCT—>输入CR号，回车—>在该CR的main页面，向下滑动，找到自己的名字—>双击你名字上面那个人的名字，跳转；
+	(2)点击DW0，跳转；
+	(3)双击DW0_ID下的那行数字，跳转；
+	(4)点击Source Code Info，在Project Name中就能找到Activity的名字
+		eg.(enb143_xinzhez_alu_shanghai_jq.24@/enba_pvob)
+	l 现在我们已经找到了之前的人的activity，如何查看他修改了什么呢？
+	(1)ct desc activity: <activity>  //查看该activity属于哪个stream
+		ct lsstream -anc <stream>  //查看stream的位置
+	(2)根据这个位置，在Exploring ClearCase Projects 中，找到该stream，右键，找到该activity；
+	(3)右键properties—>Change Set，就看到了被修改的文件及其路径。
+	(4)点击该文件，右键Compare with change set predecessor(or compare with previous …/*I don’t know the difference*/)，就可以看到别人修改了什么了。
+ 
+	Ø Checkout
+	方法1：ct co -nc
+	方法2：直接在Rational ClearCase Explorer加一个之前创建的view的shortcut，根据路径找到被修改的文件，右键checkout。//有时这种方法会出错，就改用方法1.
+ 
+	Ø 修改代码
+	打开sourceinsight，New Project—>project 与自己的VIEW名字一样—>将文件（sourcefile & header file）加载(add tree)进project中。
+		l Source file : ccase_enodeb/callp/下面的所有文件，除了build_callp；
+								//build_callp下的文件在编译以后会生成。
+		l header file:返回上一级，到if_enodeb目录下，callp ce enodeb modem oam upa
+	找到要修改的文件，做相应的修改，保存。
+	
+6. compile
+
+ 编译前准备工作（第一次建view或者rebase后，需要执行此步骤）
+cd /ccase_delivery/delivery/ss/lte/enodeb/tools/
+./enb_cs_external -add all
+ct setcs -stream
+ct lsprivate -do -other |xargs rm -rf（清除私有文件）
+ 
+cd /ccase_enodeb/callp/test/platform/
+./cpt_compile
+ 
+7. regression测试（UT）
+cd /ccase_enodeb/callp/test/platform/     //确定在该目录下
+./cpt_test -fdd
+./cpt_test -tdd
+/* regression测试不止这两个，如果这两个测试通过了，基本就可以确定，代码没有问题了，此时已经可以checkin*/
+ 
+8.Checkin修改的代码
+/*何时进行checkin：
+	如上所述，经过两个regression测试以后，就可以进行checkin了；此外，必须在rebase之前进行checkin。*/
+	方法1：ct ci -nc -cact
+	方法2：直接在Rational ClearCase Explorer中的文件右键checkin。
+	//同checkout，有两种方法，有时方法2会出错，就改用方法1
+	 
+9.    CodeReview（待完善）
+	1. 创建 code review
+		(1) 登陆(命令)：ccollab login
+		
+		> https://collab.web.alcatel-lucent.com:8181
+		> < your CSL|TPC Credential >
+		> < your CIP|TPC Password >
+		此处会有个证书选择，选择仅此一次那个，T
+	
+	(2) 在view下建立activity和cr的链接
+		
+		uts link enb16_shengxiz_alu_shanghai_jq.28 01828063.13
+       
+       （3）发起review
+	
+	cct_act_diff enb16_shengxiz_alu_shanghai_jq.28 --review --filtertype product-code
+	（4）review更新
+	cct_act_diff enb16_shengxiz_alu_shanghai_jq.23 --review_update 712310
+	
+	如果做的是PROP或者不是产品代码：
+	uts codeinspection exempt enb16_shengxiz_alu_shanghai_jq.12@/enba_pvob
+	/*mentor告诉我都要做codereview，再次，可以将自己的activity和前面的人的reference ID绑定。但其他人又说prop可以不做codereview*/ 
+          若改的是产品代码，则执行：
+         uts codeinspection inspect enb15_shengxiz_alu_shanghai_jq.17
+         uts codeinspection ready_to_submit enb15_shengxiz_alu_shanghai_jq.17 
+ 
+10.QR(beforeRebase)
+	ü 方法1：用脚本
+	cd /home/callphudson/bin/deliverQR
+	ls     //可以看到里面的模板。
+	/*模板里集成了多个compile、UT测试和purify，在一条命令完成以后可以自动进行下一行命令。*/
+	./deliverQR.pl qr=LR162_valgrind_beforeRebase_no_UBM reset      //第一次运行不需要此步骤
+	./deliverQR.pl qr=LR162_valgrind_afterRebase reset
+	./deliverQR.pl r                  //在第二台服务器上反跑程序，加快运行速度
+	/*因为UT和purify必须在compile完成之后才能进行，所以反向的服务器上必须等到正向的服务器完成compile。*/
+Eg:
+ ./deliverQR.pl qr=151   
+ /*跳出151的模板，选择模板LR151_beforerebase。之后选择失败后的重跑次数。*/
+	./deliverQR.pl r         /*同上选择之后，会问the<line> u want to wait for(default no wait),写8，回车。第八行命令以后compile结束。*/
+	 
+QR跑完以后，下载log      //否则之后跑QR(after rebase)会将前面的log覆盖掉.
+	 
+	ü 方法2：手动，可以用多于两台的服务器，只要确定regression和purify在compile(all host)结束以后。
+	 
+	Ø One coverity
+	/ccase_enodeb/callp/test/platform/cpt_compile -coverity-commit
+				/* cpt_compilation_callp_coverity_macro_summary .txt*/
+	Ø Four compile
+	/ccase_enodeb/callp/test/platform/cpt_compile -target -metro
+						/*cpt_compilation_all_target_metro_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_compile -target -lr
+							/*cpt_compilation_all_target_lr_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_compile -target
+						/*cpt_compilation_all_target_macro_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_compile  
+						/*cpt_compilation_all_host_macro_summary.txt*/
+	Ø Six regression  
+	/ccase_enodeb/callp/test/platform/cpt_test -fdd
+					/*cpt_execution_regression_fdd_enb_wal_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -tdd
+					/*cpt_execution_regression_tdd_enb_wal_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -fdd -stub_pal
+					/*cpt_execution_regression_fdd_enb_pal_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -tdd -stub_pal
+					/*cpt_execution_regression_tdd_enb_pal_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -fdd -stub_wal2
+					/*cpt_execution_regression_fdd_enb_wal2_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -tdd -stub_wal2
+					/*cpt_execution_regression_fdd_enb_wal2_summary.txt */
+	Ø three purify
+	/ccase_enodeb/callp/test/platform/cpt_test -fdd -purify_notrace -purecov -stub_pal
+			/*cpt_execution_regression_fdd_enb_pal_purify_purecov_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -tdd -purify_notrace -purecov
+			/*cpt_execution_regression_tdd_enb_wal_purify_purecov_summary.txt */
+	/ccase_enodeb/callp/test/platform/cpt_test -fdd -purify_notrace -purecov -stub_wal2
+			/*cpt_execution_regression_fdd_enb_wal2_purify_purecov_summary.txt */
+			
+  
+1) ./cpt_test  -fdd  -purify_notrace –purecov
+4) ./cpt_test  -fdd  -purify_notrace -purecov -stub_pal
+5) ./cpt_test  -tdd  -purify_notrace -purecov -stub_wal2
+ 
+11.    Rebase
+	/*rebase目的：做代码的merge */
+ct rebase -rec              // rec=recommended
+ct rebase -complete
+ 
+	Ø 如果有人在你deliver之前先进行了对同一个stream的deliver，就必须重新rebase。
+	方法1：ct rebase -rec
+		ct rebase -complete
+		/*有新的baseline*/
+		ct rebase -rec
+		ct rebase -complete
+	方法2：ct rebase -rec
+		/*有新的baseline*/
+		ct rebase -cancel    //取消
+		ct rebase -resume       //重新开始 or  ct rebase –rec(方法2待验证，没用过)
+		 
+12. QR(afterRebase)
+	 方法1：同QR(beforeRebase)的方法1，选模板的时候选LR151_afterrebase。记得下载log。
+	方法2：手动/*下面是用两台服务器的方法，为了加快速度，可以用更多的服务器*/
+	第一台服务器：
+		/ccase_enodeb/callp/test/platform/cpt_compile  
+		/ccase_enodeb/callp/test/platform/cpt_test -fdd
+		/ccase_enodeb/callp/test/platform/cpt_test -tdd
+		/ccase_enodeb/callp/test/platform/cpt_test -fdd -stub_pal
+		/ccase_enodeb/callp/test/platform/cpt_test -tdd -stub_pal
+		/ccase_enodeb/callp/test/platform/cpt_test -fdd -stub_wal2
+		/ccase_enodeb/callp/test/platform/cpt_test -tdd -stub_wal2
+	第二台服务器：/*等第一台服务器的的第一个compile跑完*/
+		/ccase_enodeb/callp/test/platform/cpt_compile -target –metro
+		/ccase_enodeb/callp/test/platform/cpt_compile -target –lr
+		/ccase_enodeb/callp/test/platform/cpt_compile –target
+	每一条命令跑完，记得下载log
+ 
+13.deliver
+	ct deliver
+	uts autodeliver -status -wait -transcript       //查询deliver状态，每半个小时同步一次
+    
+14.建view(一定要登陆远程服务器！！！！！！！！！！！！！！！！)
+ 
+ 服务器地址：139.54.98.47
+ 用户名：asbcallp
+ 密码：asb#1234
+
+ct mkview -stream enb_lr15_callp_CR_non_gating@/enba_pvob -tag shengxiz_enb_lr15_callp_CR_non_gating_delivery -host 139.54.98.47 -gpath /views_store/shengxiz_enb_lr15_callp_CR_non_gating_delivery.vws -hpath /views_store/shengxiz_enb_lr15_callp_CR_non_gating_delivery.vws  /views_store/shengxiz_enb_lr15_callp_CR_non_gating_delivery.vws
+
+15.打baseline
+ ct setview shengxiz_enb_lr16_callp_CR_delivery
+ cct_mkbl LR162
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////// 
+   ct lsview |grep asbcallp                //查找callp做deliver的view，也可以自己建view
+ct setview asbcallp_enb_lr16_callp_CR_delivery 
+   cct_mkbl LR161                         //打baseline
+	Ø 打baseline的时候出现：
+Error: mkbl has not created the baseline B_ENB_LR15_CALLP_CR_LR151_150814.1@/enba_pvob because there are no code modifications since last baseline.
+   解决办法：
+	ct lsact -cact
+	ct lsact -cview
+	ct lsact -l <deliver.xiaocaid_enb_lr15_callp_CR.20150409.062002> | less
+	ct desc -l </enodeb_callp_uerrm/uerrm/uerrm/src/uerrm_mobility_inter.cc@@/main/
+			meta_enb_integration/enb_lr15_integration/enb_lr15_callp_CR/34>
+	ct lsbl -l  <B_ENB_LR15_CALLP_CR_LR151_150814.0.4002@/enba_pvob>
+	B_ENB_LR15_CALLP_CR_LR151_150814.0就是你的baseline，别人打的baseline已经把你的deliver包含进去了，所以你打不了B_ENB_LR15_CALLP_CR_LR151_150814.1。
+	/*这个方法来源于一期他们的总结，我给我mentor看，他说他没见过…*/
+	 
+15.livelink& mail
+   将QR_beforeRebase、QR_afterRebase的结果分别打包与code review的链接一起上传到livelink上，然后发mail。
+Hi all ,
+ 
+The new baseline  B_ENB_LR15_CALLP_CR_LR151_150814.0  has been recommended on enb_lr15_callp_CR stream.
+ 
+Content : 
+ 
+· CRI 01594654.04  [PROP] using Huawei UE, making ho test, when zte ho alu, it failed. But alu ho to zte, it successed 
+ 
+QR :
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=68409504&objAction=browse&sort=-date&viewType=1
+ 
+BR
+Shi Lihui
+ 
+B_ENB_LR15_CALLP_CR_LR151_150814.0 (PROP CR01594654.04 lihuis)
+ 
+enb143_biruz_alu_shanghai_jq.8@/enba_pvob
+biruz_enb_lr143_callp_CR_Gating@/enba_pvob
+ 
+lihuis_lihuis_enb_lr15_callp_CR_Server
+ 
+enb15_lihuis_alu_shanghai_jq.2
+ 
+ 
+enb_lr143_cl5_callp_CR_biruz@/enba_pvob
+ct lsstream -anc enb_lr143_cl5_callp_CR_biruz@/enba_pvob
+ 
+uts codeinspection exempt enb151_lihuis_alu_shanghai_jq.2
+cct_act_diff <activity> --review --filtertype product-code //我登录不上
+https://collab.web.alcatel-lucent.com:8181/ui
+ 
+cd /home/callphudson/bin/deliverQR;./deliverQR.pl reset;./deliverQR.pl qr=LR151_A
+ 
+B_ENB_LR15_CALLP_CR_LR151_150814.0.4002
+ 
+ 
+ 
+/enodeb_callp_uerrm/uerrm/uerrm/src/uerrm_mobility_inter.cc@@/main/meta_enb_integration/enb_lr15_integration/enb_lr15_callp_CR/34
+ 
+ct labl -l B_ENB_LR15_CALLP_CR_LR151_150814.0.4002@/enba_pvob
