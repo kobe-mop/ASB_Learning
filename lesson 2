@@ -66,3 +66,20 @@ ct rebase -complete
     B_ENB_LR15_CALLP_CR_LR151_151216.0@/enba_pvob (enodeb_lb_comp@/enba_pvob)
 3. 根据activity找到自己的相关信息
 ct desc activity:deliver.PM_counter.20151216.020233@/enba_pvob
+
+
+关于Linux的部分命令：
+ 
+ 同步configure space
+	/ccase_delivery/delivery/ss/lte/enodeb/tools/enb_cs_external  -add all
+ 
+ 设置当前stream
+	ct setcs –stream
+  
+ 
+ 
+跑所有的case 并将失败的trace显示出来 
+	./cpt_instability_finder  -log failed_scenario
+ 
+接着上次的case跑
+	./cpt_test  -last
