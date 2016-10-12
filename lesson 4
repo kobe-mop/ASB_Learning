@@ -30,3 +30,14 @@ Cell_RLC_DATA_REQ  cellrrc->ubm->L1/L2->ue ( rrc connection setup )    (cellrrc-
 (mme-uecall)
 STCP_DATA_IND  mme->IP->stcp access->uecallp (intitle context setup request) (mme->uecall)
 STCP_DATA_REQ  uecallp->stcp access->IP->mme (intitle context setup response) (uecall->mme)
+
+
+msgmap解码:
+
+View:** zblin_CR01510853_enb_lr143_pl9_Server **>cd /ccase_enodeb/callp/tools/msgmap/src/
+View:** zblin_CR01510853_enb_lr143_pl9_Server **>ls
+CMakeCache.txt  CMakeFiles  CMakeLists.txt  Makefile  build_msgmap  cmake_install.cmake  msgmap  msgmap.cc  msgmap_includes.txt  msgmap_results_converter
+View:** zblin_CR01510853_enb_lr143_pl9_Server **>./msgmap -endian big Ubm_ue_pdcp_data_ind_t (CPI_CrmUeCacCtxSetupReq_t)
+Enter a raw data dump (limit 1kB):
+0081911c00000044ffffffff0083009e0000086a000083858000086a0000000201000000000000353a01031c9b80281402010381ff837620000800c160000000000e2041d000040c4000400710001034000100081c0e0000000060400075b853
+
