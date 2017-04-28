@@ -32,12 +32,13 @@ STCP_DATA_IND  mme->IP->stcp access->uecallp (intitle context setup request) (mm
 STCP_DATA_REQ  uecallp->stcp access->IP->mme (intitle context setup response) (uecall->mme)
 
 
-msgmap解码:
+4.UE在什么时候会发生RRC重建？
+	1. 无线链路失败(other)
+	2. 切换失败
+	3. mobility from E-UTRA 失败
+	4. 完整性保护失败
+	5. RRC连接重配置失败
 
-View:** zblin_CR01510853_enb_lr143_pl9_Server **>cd /ccase_enodeb/callp/tools/msgmap/src/
-View:** zblin_CR01510853_enb_lr143_pl9_Server **>ls
-CMakeCache.txt  CMakeFiles  CMakeLists.txt  Makefile  build_msgmap  cmake_install.cmake  msgmap  msgmap.cc  msgmap_includes.txt  msgmap_results_converter
-View:** zblin_CR01510853_enb_lr143_pl9_Server **>./msgmap -endian big Ubm_ue_pdcp_data_ind_t (CPI_CrmUeCacCtxSetupReq_t)
-Enter a raw data dump (limit 1kB):
-0081911c00000044ffffffff0083009e0000086a000083858000086a0000000201000000000000353a01031c9b80281402010381ff837620000800c160000000000e2041d000040c4000400710001034000100081c0e0000000060400075b853
-
+在LTE中，当UE处于RRC连接状态时/且在空口安全激活的时候，一旦出现“切换失败、无线链路失败、完整性保护失败、RRC重配置失败、mobility from E-UTRA 失败”这五种情况之一，将会触发RRC连接重建过程。
+小区重建走的是小区选择流程（小区搜索）而不是重选。小区重选是在邻区中进行，但小区搜索，是可以搜到任何的满足S准则的小区的，即重建，可能发生在之前的小区、或之前小区的邻区、或其他任意的检测到的满足了S准则的小区。 
+如果重建的小区没有此UE的上下文，那么重建会失败。所以，在之前的小区重建，成功的概率还是有的，但如果在跨了eNODEB的邻区重建，因为没有此UE的上下文，RRC重建会失败（暂时不考虑X2接口上的UE上下文参数的传递 ）。
