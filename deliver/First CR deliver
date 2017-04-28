@@ -1,0 +1,190 @@
+Deliver 流程
+1. 建立stream
+ct mkstream –in enb_lr15_callp_CR@/enba_pvob  –baseline baselinename zhihuac_enb_lr15_callp_CR@/enba_pvob
+ baseline可以用缺省的，会自动推荐到最新的。在后面rebase时也需要更新。
+2. 建立view
+cd /nfs/tools/tddtools
+./MakeDynViewOnServerForTDD
+跳出一个协议界面，选择y
+   Input ‘stream@pvob’name: zhihuac_enb_lr15_callp_CR@/enba_pvob
+自动生成view。Zhihuac_zhihuac_enb_lr15_callp_CR_Server
+3. 建立activity
+ct mkact
+自动生成名字，记录修改痕迹。
+查看方法：
+方法一：
+在clearcase中右键自己的view（zhihuac_zhihuac_enb_lr15_callp_CR_Server），点击“properties of view”，在”general”页面下，“Current default activity for this view”，点击“properties”，进入页面后，选中“change set”,右键所改代码文件，选择“compare with change set predecessor”即可出现修改对比画面。
+ 
+方法二：
+ct desc -g activity:enb15_zhihuac_alu_shanghai_jq.1@/enba_pvob
+4. check out
+在clearcase中，选中文件右键即可check out。在sourceinsight中直接修改保存即可。
+5. 编译前准备工作（第一次建view或者rebase后，需要执行此步骤）
+cd /ccase_delivery/delivery/ss/lte/enodeb/tools/
+./enb_cs_external -add all
+ct setcs –stream
+ct lsprivate -do -other |xargs rm –rf（清除私有文件）
+6. 编译代码
+cd /ccase_enodeb/callp/test/platform/
+./cpt_compile
+7. 跑regression测试
+./cpt_test –fdd
+./cpt_test –tdd
+8. Checkin修改的代码
+	直接在clearcase中，checkin
+9. 创建 code review
+	(1) 登陆(命令)：ccollab login
+	> https://collab.web.alcatel-lucent.com:8181
+	> < your CSL|TPC Credential >
+	> < your CIP|TPC Password >
+	此处会有个证书选择，选择仅此一次那个，T
+(2) 在view下建立activity和cr的链接
+	uts link activity名字 CR号
+	uts link enb15_zhihuac_alu_shanghai_jq.1 01658618.01
+10. 发起review
+cct_act_diff activity名字 CR号
+cct_act_diff enb143_zhihuac_alu_shanghai_jq.1 --review --filtertype product-code
+产品代码跟非产品代码
+产品代码是指在产品上运行的代码，主程序代码
+非产品代码是指一些UT代码，仿真代码等，不在产品上运行，测试使用代码
+非产品代码时，指令中--filtertype product-code需要去掉
+11. 根据上一部生成的review ID，填写IE浏览器（https://collab.web.alcatel-lucent.com:8181）中的相关信息
+
+
+
+12. 跑beforeRebase的QR
+cd /home/callphudson/bin/deliverQR
+./deliverQR.pl qr=<模版> reset(第一次运行不需要此步骤)
+./deliverQR.pl qr=<模版>
+./deliverQR.pl r (在第二台服务器上反跑程序，加快运行速度)
+./deliverQR.pl w=<模板> wl (观察QR运行状态)
+其中查看QR运行状态，可直接在security CRT环境下链接服务器然后进入view，进入目录
+cd /home/callphudson/bin/deliverQR
+./deliverQR.pl w=<模板> wl
+13. QR before rebase 将近跑了40小时，可以采用多台机器同时跑，或者脚本正反跑的方式。结果存储在/local/zhihuac/deliverQR/LR151_beforeRebase目录下。
+14. 在home/zhihuac/deliverQR检查运行的结果，都为success则继续下一步。
+15. Rebase
+ct rebase -recom –gmerge// 推荐baseline rebase    出现 no need rebase 说明是最新的baseline无须操作
+ct rebase –complete//  只用 这两条命令 足够
+下次rebase 先rebase complete，然后同步，然后编译跑测试
+16. 编译代码并跑regression测试
+cd /ccase_enodeb/callp/test/platform/
+./cpt_compile
+./cpt_test –fdd
+./cpt_test –tdd
+17. 跑afterRebase的QR
+cd /home/callphudson/bin/deliverQR
+./deliverQR.pl qr=<模版> reset
+./deliverQR.pl qr=<模版>
+./deliverQR.pl r (在第二台服务器上反跑程序，加快运行速度)
+服务器选择：135.251.238.20:1
+容易出问题:
+	1. baseline被更新
+	2. 中间断掉
+18. 下载QR记录
+用ftp软件在/local/zhihuac/deliverQR/LR151_afterRebase目录下
+19. code review 必须已经全员approved后处于completed状态。
+进而在线修改一些提交配置状态
+修改CR DWOs状态I
+uts codeinspection inspect enb15_zhihuac_alu_shanghai_jq.1
+ 
+View:** tjchen_tjchen_enb_lr143_callp_CR_bis_eight_Server **>uts codeinspection inspect  enb16_shengxiz_alu_shanghai_jq.42
+Select Res Description Template from the list:
+ 
+1)      Resolution Description Template
+2)      Technical Feasibility
+Enter a value from 1-2, 0 to Cancel:
+1
+Failed to get template for field ResDescriptionTemplate -  D_Template (Resolution Description Template) not found
+Enter Resolution Description:
+Open with xemacs?
+Please select 'No' to use clearprompt. [no] no
+Enter Resolution Description:
+end with dot "." on new line (just for command line, not needed for GUI)
+.
+ 
+Enter Resolution Description:
+end with dot "." on new line (just for command line, not needed for GUI)
+.
+ 
+Enter Resolution Description:
+end with dot "." on new line (just for command line, not needed for GUI)
+CRI
+.
+ 
+Enter Implementation Impact:
+end with dot "." on new line (just for command line, not needed for GUI)
+CRI
+.
+ 
+Enter Reference Tool (required):
+ 
+1)      CMCS
+2)      Code Collaborator
+3)      HyperCode/eForms6
+4)      Not Listed
+Enter a value from 1-4, 0 to Cancel:
+2
+Enter Reference ID (required):467809
+Enter more inspection records? [yes] no
+DWO 01552833.02.d001 updated. Now in UnderInspection state
+修改CR DWOs状态II
+uts codeinspection ready_to_submit enb15_zhihuac_alu_shanghai_jq.1
+ 
+View:** tjchen_pengpend_enb_lr15_callp_CR_Server **>uts codeinspection ready_to_submit enb16_shengxiz_alu_shanghai_jq.42
+Select Earliest Possible Det Act from the list:6
+
+1)      ACT01 - Requirement Analysis
+2)      ACT02 - System Definition - Architecture
+3)      ACT03 - Subsystem Definition - Architecture
+4)      ACT06 - SW High Level Design
+5)      ACT07 - SW Detailed Design
+6)      ACT08 - SW Coding
+7)      ACT09 - SW Design Testing
+8)      ACT10 - SW Design Integration
+9)      ACT13 - Subsystem Integration and Verification
+10)     ACT14 - System Verification
+11)     ACT15 - System Validation Support
+Enter a value from 1-11, 0 to Cancel:
+6
+Select value(s) (space or comma separated) for Verification Method from the list:
+1)      Not Specified
+Enter a value from 1-1, 0 to Cancel:
+1
+Select Bwd Propagation Proposed from the list:
+1)      Yes
+2)      No
+Enter a value from 1-2, 0 to Cancel:
+2
+ 
+20. 提交代码
+ct deliver 
+可能要等会儿。
+查询deliver状态
+uts autodeliver –status –wait –transcript
+看是否success。
+21. 登录服务器
+Host adress：139.54.98.47
+User name:  asbcallp
+Password:   asb#1234
+22. 创建提交的view
+之前创建的view是本地的。此处是创建deliver服务器上的view。
+ct mkview -stream enb_lr15_callp_CR@/enba_pvob -tag zhihuac_enb_lr15_callp_CR_delivery -host 139.54.98.47 -gpath /views_store/zhihuac_enb_lr15_callp_CR_delivery.vws -hpath /views_store/zhihuac_enb_lr15_callp_CR_delivery.vws  /views_store/zhihuac_enb_lr15_callp_CR_delivery.vws
+ 
+23. 打baseline
+ct setview zhihuac_enb_lr15_callp_CR_delivery
+   cct_mkbl LR151
+24. 将QR_beforeRebase、QR_afterRebase的结果分别打包与code review的连接一起上传到livelink上
+上传方式可以参考其他人发邮件的格式。
+主要包括：codereview、QR_beforeRebase、QR_afterRebase
+25. 给整个team发邮件
+ 
+	一些常用命令
+		Ø 查看谁在使用服务器：ps -ef |grep cpt
+		Ø 查看baseline：ct lsstream -l
+		Ø 查看view：ct lsview |grep zhihuac
+		Ø 跑case命令选项：-tdd/fdd -stub_pal/stub_wal2 -log all/failed_scenario -verbosity all -stress 30 -select/-last -purify_trace/-purify_notrace
+		Ø 查看代码是谁改的：cct_find_predecessors 文件路径 改动处
+		Ø 查看checkout：ct lsact –l
+		Ø 取消deliver：登录远程服务器，ct deliver -cancel -stream your_sub_stream @/enba_pvob （-status可查询deliver的状态）
+		 
