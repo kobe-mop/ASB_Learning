@@ -1,0 +1,65 @@
+编译：
+1. cd /ccase_enodeb/callp/test/platform/
+2. ./cpt_compile
+ 
+ 
+cd /ccase_enodeb/callp/build_callp/genhost/
+make scen /fast
+ 
+要点：
+1. Uecall_core_t (例如uecall_core_ROOT_IDLE_rrcCnxReq) 查找状态机的流程图
+				（状态机的位置à状态à接收到的消息）
+				
+2. Uecall_core_p  （例如：uecall_core_rrmRrcCnxReq）
+			（如上图所示，查找core状态机中rrmRrcCnxReq函数）
+3. Uecall_tab  (查找uecall接收消息的位置,消息的入口位置) 
+ 
+跑case：
+1. cd /ccase_enodeb/callp/test/platform/
+2. ./cpt_test -bbrc -fdd –select（或者./cpt_test -bbrc -fdd -select -log all -verbosity full）
+ 
+/local/shengxiz/.nreg247/run1/REGRESSION/CALLP92127_CMAS/CMAS_WRITE_WARNING/WRITE_WARNING_CMAS_MESSAGE_FOR_THREE_CELLS/       
+ 
+ 
+ 
+看trace
+1.首先跑完case.
+2. 接收端采用cellrrc_tab（或者uecall_tab等等）搜索到消息的入口位置,找到该消息(例如cellrrc_rlc_data_ind_method)，在cnu_trace_embryo_cellcallp.1.0_3.log文件里面搜索(rlc_data_ind_method)消息.
+3.trace路径：local/shengxiz/.nreg691/run1/REGRESSION/CALLP000016_UEREG/UEREG_SETUP/ UEREG_SETUP_SCENARIO/UE_CALL_SUCCESS_AND_RRC_RELEASE_DETACH/upos_trace3.txt
+ 
+ 
+根据Load查baseline：
+Ct lsbl –l B_ENODEB_LR1501D020M_E005.17@/enba_pvob
+列出这个baseline在哪个stream上
+ 
+列出流
+ct lsstream –anc             
+ 
+找某stream的recommended baseline：
+ct lsstream –l  <stream>
+
+打patch：
+1. Rebase到别人的baseline上: 
+Ct rebase –baseline B_ENODEB_LR1501D020M_E005.17@/enba_pvob   
+ct rebase -complete
+2. 编译cd /ccase_enodeb/callp/test/platform/      ./cpt_compile
+3. ./cpt_compile -target
+4. 进入文件夹 /ccase_enodeb/callp/build_callp/geneccm/out
+	把xxxcallp.so.stripped 拷出来，然后把.stripped 去掉
+5. 用filezailla上传文件到server
+ 
+这个case连续跑多长时间，如果失败就停止 
+加参数 -stress 60 -stop_all
+如果还不行，-stress 600 -stop_all
+
+根据deliver的stream找自己的activity
+1. ct lsstream -l enb_lr15_callp_CR@/enba_pvob
+2. 找到自己的activity
+ deliver.PM_counter.20151216.020233@/enba_pvob（这个是activity）
+ deliver.enb_lr15_callp_CR_xianaz_1.20151216.023228@/enba_pvob（同样这个是activity）
+  foundation baselines:
+    B_ENODEB_LR1501D030M_E007.33@/enba_pvob (enodeb_lb_comp@/enba_pvob) (non-modifiable)
+  recommended baselines:
+    B_ENB_LR15_CALLP_CR_LR151_151216.0@/enba_pvob (enodeb_lb_comp@/enba_pvob)
+3. 根据activity找到自己的相关信息
+ct desc activity:deliver.PM_counter.20151216.020233@/enba_pvob
