@@ -1,0 +1,112 @@
+****************************************************************************
+*    WARNING                  ALCATEL-LUCENT                    WARNING    *
+****************************************************************************
+RNC Lincase:           lablte233
+Registered to user:    Chen Wei D (2012-08-29)
+ 
+ 
+If you are not an employee of Alcatel-Lucent or an authorized user,
+Do Not Attempt to log on.
+All operations you made on this machine (lablte233) will be recorded,
+Please be responsible on whatever you plan to do.
+ 
+You can get help from the website below:
+Submit tickets from the website:
+http://172.24.12.129/rdr/common/ticketsystem_new/index.php
+ 
+**************************Last updated 2012-08-29***************************
+****************************************************************************
+Last login: Tue Jul  7 10:56:48 2015 from cv0038932n0-172024249140.cn.alcatel-lucent.com
+Sourcing MoTUS' .(tcsh/csh)rc ...
+Sourcing /opt/swe/tools/in/environ-4.3.4/cshrc.motus
+Sourcing /opt/swe/prof/asb_shanghai/enodeb/linux/.cshrc
+Sourcing /home/shengxiz/.csh_aliases
+Sourcing MoTUS' .login ...
+Sourcing /opt/swe/tools/in/environ-4.3.4/login.motus
+Skipping corpsetup.
+SWE_OS: linux
+Skipping resize...
+Setting needed tools variables... Done.
+MoTUS Project is set to [asb_shanghai/enodeb/linux]
+Sourcing /opt/swe/prof/asb_shanghai/enodeb/linux/.login
+Sourcing /home/shengxiz/.mylogin
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> vncserver -kill :7
+execution /usr/bin/vncserver (default[pathghost!])
+execution perl-5.8.7_threads/perl (asb_shanghai/enodeb/linux)
+Killing Xvnc process ID 21786
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> vi ~/.vnc/xstartup
+execution vim-6.3/vim (asb_shanghai/enodeb/linux[default])
+ 
+ 
+#!/bin/sh
+# Uncomment the following two lines for normal desktop:
+# unset SESSION_MANAGER
+# exec /etc/X11/xinit/xinitrc
+ 
+[ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+[ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+xsetroot -solid grey
+vncconfig -iconic &
+xterm -geometry 80x24+10+10 -ls -title "$VNCDESKTOP Desktop" &
+ 
+ 
+ 
+ 
+ 
+#gnome-session
+startkde
+#twm &
+ 
+#twm&
+ 
+ 
+~
+".vnc/xstartup" 25 lines, 376 characters written
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cp /home/zblin/.vnc/x
+/home/zblin/.vnc/ unreadable
+ 
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cp /home/zblin/.vnc/xstar
+/home/zblin/.vnc/ unreadable
+ 
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cp /home/zblin/.vnc/xstarup
+/home/zblin/.vnc/ unreadable
+ 
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cp /home/zblin/.vnc/xstartup ~/.vnc/xstartup
+cp: cannot stat `/home/zblin/.vnc/xstartup': Permission denied
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> su zblin
+Password: 
+Sourcing MoTUS' .(tcsh/csh)rc ...
+Sourcing /opt/swe/tools/in/environ-4.3.4/cshrc.motus
+Sourcing /opt/swe/prof/asb_shanghai/enodeb/linux/.cshrc
+Sourcing /home/zblin/.csh_aliases
+zblin(asb_shanghai/enodeb/linux)@lablte233> cp ~/.vnc/xstartup /local/zblin
+zblin(asb_shanghai/enodeb/linux)@lablte233> exit
+exit
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cp /local/zblin/xstartup ~/.vnc/
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> ls
+em_mig18304.log  em_mig23783.log           envbackup.20150706081341
+em_mig23563.log  envbackup.20150706030831  envbackup.20150706081400
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> ls ~/.vnc
+lablte233:1.log  lablte233:3.log  lablte233:5.log  lablte233:7.log
+lablte233:1.pid  lablte233:3.pid  lablte233:5.pid  passwd
+lablte233:2.log  lablte233:4.log  lablte233:6.log  xstartup
+lablte233:2.pid  lablte233:4.pid  lablte233:6.pid
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> vncserver 
+execution /usr/bin/vncserver (default[pathghost!])
+execution perl-5.8.7_threads/perl (asb_shanghai/enodeb/linux)
+ 
+New 'lablte233:7 (shengxiz)' desktop is lablte233:7
+ 
+Starting applications specified in /home/shengxiz/.vnc/xstartup
+Log file is /home/shengxiz/.vnc/lablte233:7.log
+ 
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> rm ~/.vnc/xstartup 
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cp /local/zblin/xstartup ~/.vnc/
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> vncserver 
+execution /usr/bin/vncserver (default[pathghost!])
+execution perl-5.8.7_threads/perl (asb_shanghai/enodeb/linux)
+ 
+New 'lablte233:8 (shengxiz)' desktop is lablte233:8
+ 
+Starting applications specified in /home/shengxiz/.vnc/xstartup
+Log file is /home/shengxiz/.vnc/lablte233:8.log
