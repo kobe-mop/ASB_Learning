@@ -1,0 +1,411 @@
+CC代码目录：enab->monostream
+ 
+【申请vnc端口】
+putty登陆后执行vncserver
+ 
+【在指定主stream下创建自己的子stream】
+ct mkstream -in enb_lr15_callp_CR@/enba_pvob dengxiaozhong_enb_lr15_callp_CR@/enba_pvob
+ 
+【创建view】
+执行脚本./addview
+输入子stream名字dengxiaozhong_enb_lr15_callp_CR
+ 
+【进入view】
+查询ct lsview
+ 
+执行脚本./viewmgr.pl s （便于筛选自己的view）
+选择需要输入的view号码
+或者cct_setview <view号码>
+ 
+【创建activity】
+ct mkact
+ 
+【查询activity】
+ct lsact
+ 
+【检出】
+ct ci -nc 文件名
+ct lsact -l  查询当前check状态
+【检入】
+ 
+？？？
+ 
+【编译准备】：
+记得同步一下
+删除中间过程和冗余文件
+ct lsprivate -do -other|xargs rm –rf    在同步一下 ct setcs –stream
+设置参数变量
+/ccase_delivery/delivery/ss/lte/enodeb/tools/enb_cs_external -clean -add all 
+ 
+ 
+【HOST编译】（以便执行UT）：
+在view下面
+cd /ccase_enodeb/callp/test/platform/
+pile(-rebuild)
+或者分布式编译脚本
+python /home/make5/make5_2/app/make5.tsa
+python /home/make5/make5_2/app/make5.tsa --kill
+ 
+保存编译日志（后续上传link）：
+/local/xiaozhod/xiaozhod_dengxiaozhong_enb_lr15_callp_CR_Server/compilation_logs/cpt_compilation_all_host_macro_summary.txt
+ 
+ 
+【UT用例】
+在view下面
+cd /ccase_enodeb/callp/test/platform/
+./cpt_test -fdd -bbrc -regression
+./cpt_test -tdd -bbrc –regression  155
+./cpt_test -fdd -bbrc -stub_wal2 -regression 
+./cpt_test -tdd -bbrc -stub_wal2 –regression    
+./cpt_test -fdd -bbrc -stub_pal –regression      
+./cpt_test -tdd -bbrc -stub_pal –regression    
+ 
+保存日志目录：（跑完一个存一个）
+/local/xiaozhod/xiaozhod_dengxiaozhong_enb_lr15_callp_CR_Server/exec_logs
+/local/xiaozhod/.nreg965
+ 
+长时间UT用例（从主干同步代码的话不用再跑这些用例）：
+在view下面
+cd /ccase_enodeb/callp/test/platform/
+./cpt_test -tdd -bbrc -regression -purify_notrace -purecov
+./cpt_test -fdd -bbrc -stub_wal2 -regression -purify_notrace –purecov(没改UBM的代码，wal2的purify不用跑)
+./cpt_test -fdd -bbrc -stub_pal -regression -purify_notrace -purecov
+ 
+失败后的单个用例调试
+./cpt_test -tdd -bbrc -regression -select -log all 后续图形界面中选择 CA测试套178965
+./cpt_test -tdd -bbrc -regression -select 用例名 -log all 
+./cpt_test -fdd -bbrc -regression -log all -verbosity dfd -stop_all -select -cpu 1  记录详细日志
+即 ./cpt_test -tdd -bbrc -regression -log all -select
+手工选用例，点击include单个跑。
+ 
+./cpt_test -tdd -bbrc -regression 对应
+./cpt_test -tdd -cpu 1 -stop_all -log all -select 命令
+ 
+./cpt_test -fdd -bbrc -stub_wal2 -regression -purify_notrace –purecov 对应
+./cpt_test -fdd -bbrc -stub_wal2   -purify_trace -purecov -log all   -stop_all –select (错的)
+./cpt_test -fdd -bbrc -stub_wal2   -purify_trace -purecov –select (不要用stop all ，因为系统认为三次全fail才是fail，如果又一次过了，他认为是过了)
+ 
+ 
+ 
+./cpt_test -tdd -bbrc -regression -purify_notrace -purecov 对应
+./cpt_test -tdd -bbrc -purify_trace -purecov -log all -stop_all –select (错的)
+./cpt_test -tdd -bbrc -purify_trace -purecov –select (不要用stop all ，因为系统认为三次全fail才是fail，如果又一次过了，他认为是过了)
+ 
+ 
+日志路径：
+cd /local/xiaozhod/.nreg571/run1/REGRESSION/CALLP176916_EMBMS/EMBMS_176916_SCEN_SCELLMBMSINFO/
+ 
+用例文件目录:
+/enodeb_callp_tstsce/tstsce/sce/callp176916_embms/src/embms_176916_scen_scellMbmsInfo.cc
+【Target编译】
+清理一下私有文件  (做 compile 很有必要)
+ct lsp -do -other|xargs rm –rf   
+ 
+(同一view同时只能编译一个，和UT不要同时跑，会有影响)
+在view下面
+cd /ccase_enodeb/callp/test/platform/
+Target
+./cpt_compile -target
+ 
+LR Target
+./cpt_compile -lr -target
+ 
+Metro Target
+./cpt_compile -metro -target
+ 
+Can be done before the last rebase
+Coverity(检查内存约三小时，不依赖于Target编译)
+./cpt_compile -coverity-commit
+ 
+PS: ./cpt_compile -clean 清理编译文件
+ 
+ 
+ 
+【创建code review】
+登陆(命令)：ccollab login
+> https://collab.web.alcatel-lucent.com:8181
+> < your CSL|TPC Credential >
+> < your CIP|TPC Password >
+即：
+ccollab login https://collab.web.alcatel-lucent.com:8181 tjchen mima@04581
+ 
+进入view
+建立activity和cr的链接
+uts link act名称（比如：enb143_shenyuc_alu_shanghai_jq.6） CR号（比如：01519190.01）
+即
+uts link enb143_tjchen_alu_shanghai_jq.9 01392472.15
+   
+(uts link enb15_tjchen_alu_shanghai_jq.8 01575595.17)   
+ 
+发起review
+cct_act_diff act名称（比如：enb143_shenyuc_alu_shanghai_jq.6） --review --filtertype product-code
+cct_act_diff enb143_tjchen_alu_shanghai_jq.9 --review --filtertype product-code
+ 
+即：
+cct_act_diff enb15_tjchen_alu_shanghai_jq.8 --review --filtertype product-code  (如果是ut code ，就去掉--filtertype product-code))
+这一部分是上传ut代码，一般不用上传cct_act_diff --filter <scenarios_files> --review-update <review_number>
+即：cct_act_diff --filter /main/enb_lr143_integration/tjchen_enb_lr143_callp_bis_eight/tdd_carrier_aggregation_pucchformat.cc --review-update 467809
+到此  根据生成的review ID 号，再开始填写网页 信息。
+Codereview 要发两封邮件，一份是自动触发 approve的邮件，一封是定时提醒中加入评审链接的  邮件。
+ 
+ 
+如果 第一次 review后 重新更新代码 需执行：
+cct_act_diff --filter crm_cac.cc   --review_update 467809
+ 
+另外一个activity  来更新
+ccollab addactivity --diffintegration reviewID act名称
+ccollab addactivity --diffintegration 449687 enb15_xiaozhod_alu_shanghai_jq.3
+ 
+Code review 要求：
+1.code review的状态必须是 “COMPLETED”
+2.max review rate = 250 LOC/h
+3.defect rate > 5 defect/kLOC
+ 
+以上三项准则都是通过cct_act_diff工具检查（计算）得来。
+sPO在提交checklist前通过该命令进行code review项的合规性检查，并且在提交delivery申请的时候将其检查的最终结果填入checklist。
+ 
+【Rebase】
+ct rebase -recom –gmerge// 推荐baseline rebase    出现 no need rebase 说明是最新的baseline无须操作
+ct rebase –complete//  只用 这两条命令 足够
+下次rebase 先rebase complete，然后同步，然后编译跑测试
+ 
+ct rebase –cancel  // 取消
+ct rebase –resume  /// 重新开始
+ct rebase -resume –gmerge  //  我的理解 是 和上面一条命令  一同使用
+ 
+rebase完后跑HOST，Target编译，两个UT。
+./cpt_test -fdd -bbrc -regression
+./cpt_test -tdd -bbrc -regression
+之后 可以deliver 和 ut同时做
+ 
+ 
+【Deliver】
+Code Review必须已经全员approved
+ 
+修改CR DWOs状态I
+uts codeinspection inspect enb15_zlin005_alu_shanghai_jq.11
+ 
+View:** tjchen_tjchen_enb_lr143_callp_CR_bis_eight_Server **>uts codeinspection inspect enb15_tjchen_alu_shanghai_jq.3
+ 
+Select Res Description Template from the list:
+ 
+1)      Resolution Description Template
+2)      Technical Feasibility
+Enter a value from 1-2, 0 to Cancel:
+1
+Failed to get template for field ResDescriptionTemplate -  D_Template (Resolution Description Template) not found
+Enter Resolution Description:
+Open with xemacs?
+Please select 'No' to use clearprompt. [no] no
+Enter Resolution Description:
+end with dot "." on new line (just for command line, not needed for GUI)
+.
+ 
+Enter Resolution Description:
+end with dot "." on new line (just for command line, not needed for GUI)
+.
+ 
+Enter Resolution Description:
+end with dot "." on new line (just for command line, not needed for GUI)
+CRI
+.
+ 
+Enter Implementation Impact:
+end with dot "." on new line (just for command line, not needed for GUI)
+CRI
+.
+ 
+Enter Reference Tool (required):
+ 
+1)      CMCS
+2)      Code Collaborator
+3)      HyperCode/eForms
+4)      Not Listed
+Enter a value from 1-4, 0 to Cancel:
+2
+Enter Reference ID (required):467809
+Enter more inspection records? [yes] no
+DWO 01552833.02.d001 updated. Now in UnderInspection state
+修改CR DWOs状态II
+uts codeinspection ready_to_submit enb15_zlin005_alu_shanghai_jq.11
+ 
+6) ACT08 - SW Codinghaojiu
+1) Not Specified
+2) No
+View:** tjchen_pengpend_enb_lr15_callp_CR_Server **>uts codeinspection ready_to_submit enb15_tjchen_alu_shanghai_jq.3
+ 
+Select Earliest Possible Det Act from the list:
+1)      ACT01 - Requirement Analysis
+2)      ACT02 - System Definition - Architecture
+3)      ACT03 - Subsystem Definition - Architecture
+4)      ACT06 - SW High Level Design
+5)      ACT07 - SW Detailed Design
+6)      ACT08 - SW Coding
+7)      ACT09 - SW Design Testing
+8)      ACT10 - SW Design Integration
+9)      ACT13 - Subsystem Integration and Verification
+10)     ACT14 - System Verification
+11)     ACT15 - System Validation Support
+Enter a value from 1-11, 0 to Cancel:
+6
+Select value(s) (space or comma separated) for Verification Method from the list:
+1)      Not Specified
+Enter a value from 1-1, 0 to Cancel:
+1
+Select Bwd Propagation Proposed from the list:
+1)      Yes
+2)      No
+Enter a value from 1-2, 0 to Cancel:
+2
+ct deliver
+ 
+同步需要约30分钟
+本地查看deliver状态
+uts autodeliver –status
+ 
+如何查看deliver 是否OK？
+Project explorer 找到要deliver 到的stream：propertyàconfigurationà是否有自己的deliver记录
+ 
+ 
+ 
+【远程打Baseline】也可以在子stream上通过nfs工具新建父stream的view
+申请端口后vnc如下IP
+135.238.161.24
+account "asbcallp"
+password "asb#1234";
+ 
+asbcallp(enodeb/linux)@frvilw0f09980> ct mkview -stream enb_lr143_callp_CR_bis[YF1] @/enba_pvob -tag tjchen_enb_lr143_callp_CR_bis_delivery[YF2]  -host 135.238.161.24 -gpath /views_store/tjchen_enb_lr143_callp_CR_bis_delivery.vws -hpath /views_store/tjchen_enb_lr143_callp_CR_bis_delivery.vws /views_store/tjchen_enb_lr143_callp_CR_bis_delivery.vws  // 这是申请view的，如果有父view，可以跳过
+Created view.
+Host-local path: 135.238.161.24:/views_store/tjchen_enb_lr143_callp_CR_bis_delivery.vws
+Global path:     /views_store/tjchen_enb_lr143_callp_CR_bis_delivery.vws
+It has the following rights:
+User : asbcallp : rwx
+Group: enodeb   : rwx
+Other:          : r-x
+Attached view to stream "enb_lr143_callp_CR_bis".
+asbcallp(enodeb/linux)@frvilw0f09980> 
+asbcallp(enodeb/linux)@frvilw0f09980> 
+asbcallp(enodeb/linux)@frvilw0f09980> 
+asbcallp(enodeb/linux)@frvilw0f09980> 
+asbcallp(enodeb/linux)@frvilw0f09980> 
+asbcallp(enodeb/linux)@frvilw0f09980> ct setview tjchen_enb_lr143_callp_CR_bis_delivery   // 这是进view的
+Sourcing MoTUS' .(tcsh/csh)rc ...
+Sourcing /opt/swe/tools/in/environ-4.3.4/cshrc.motus
+Sourcing /opt/swe/prof/enodeb/linux/.cshrc
+Sourcing /home/asbcallp/.csh_aliases
+View:** tjchen_enb_lr143_callp_CR_bis_delivery **>
+View:** tjchen_enb_lr143_callp_CR_bis_delivery **>
+View:** tjchen_enb_lr143_callp_CR_bis_delivery **>
+View:** tjchen_enb_lr143_callp_CR_bis_delivery **>cct_mkbl lr143
+Command:
+1) cleartool mkbl -incremental -component enodeb_lb_comp@/enba_pvob B_ENB_LR143_CALLP_CR_BIS_LR143_150609.2
+Confirm creation of B_ENB_LR143_CALLP_CR_BIS_LR143_150609.2@/enba_pvob ? [yes] y
+ 
+使用已经有的view
+ct setview zhenyuga_callp_lr143_CR_bis_delivery
+ct setview zongfenz_enb_lr15_callp_CR_delivery
+ 
+ 
+检查副本
+ct lsstream -l enb_lr15_callp_CR@/enba_pvob | grep "master replica"
+直到屏幕出现
+master replica: alu_acez@/enba_pvob
+ 
+本地查看deliver状态
+uts autodeliver -status
+ 
+ct_mkbl lr143/lr151
+yes
+yes
+ 
+ 
+【上传Link报告】
+LTE LR13:
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=65943004&objAction=browse&sort=name&viewType=1
+ 
+LTE LR14:
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=66536334&objAction=browse&sort=name&viewType=1
+ 
+LTE LR15:
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=67389847&objAction=browse&sort=name&viewType=1
+ 
+CR
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=67882573&objAction=browse&sort=name#
+ 
+LTE LR16:
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=67731030&objAction=browse&sort=name&viewType=1
+ 
+ 
+【邮件通知】如果被覆盖，用recommanded，如果没有被覆盖，就用create and recommend
+TO:DL-FR-LTE-CALLP-GLOBAL <DL-FR-LTE-CALLP-GLOB@exchange.alcatel-lucent.com>; LTE-CALLP-TEAMS-KE <lte-callp-teams-ke@list.alcatel-lucent.com>
+Subject:[lte-callp-team-f]The new baseline B_ENB_LR15_CALLP_CR_LR15_150424.0@/enba_pvob has been recommended on stream enb_lr15_callp_CR 
+ 
+Hi, all,
+ 
+A new baseline B_ENB_LR15_CALLP_CR_LR15_150424.0@/enba_pvob has been recommended on stream enb_lr15_callp_CR
+ 
+Content
+CRI  01519190.01 [LR15.1 BCEM-FI] 180170- 2CA out of 3 Cell configuration fail
+ 
+QR:
+https://wcdma-ll.app.alcatel-lucent.com/livelink/livelink.exe?func=ll&objId=68113270&objAction=browse&viewType=1
+ 
+Best regards,
+Deng Xiaozhong
+ 
+ 
+【自动化一键式脚本】
+1/ cct_setview
+2/ cd /ccase_enodeb/callp/test/platform/
+    ./testPlan –all_qr
+3/  QR generated
+    日志目录
+    /local/<user>/<view_name>/
+4/参数说明
+（全量QR）
+testPlan –all_qr
+will run all needed QR, ie:
+compilations host/target/coverity/metro
+executions fdd bbrc/tdd bbrc/purify urecov fdd bbrc/purify purecov tdd bbrc
+ 
+（rebase后的轻量级QR）
+testPlan –lite_qr
+will run following QR:
+compilations host/target/
+executions fdd bbrc/tdd bbrc 
+ 
+ 
+【清理PC空间】
+今天我遇到debug PC磁盘空间满，导致UT起不来的问题，解决方法就是联系占用磁盘空间大的user删掉其名下/local/<user> 的不用的文件夹
+查看每个文件夹大小的命令
+cd /local;
+ls |xargs du –sh;
+ 
+另外，很多.nreg开头的文件夹，也很耗磁盘空间，使用 “ls -la”可以看到，然后删掉不用的文件夹
+ 
+ 
+【解消息】
+CCT_SETVIEW
+ 
+cd /ccase_enodeb/callp/tools/msgmap/src
+ 
+./msgmap CPI_BrcCellDLPRBConsReportIndication_t <-enter
+ 
+贴入消息内容 <-enter
+ 
+【出Patch】
+（1）建activity
+（2）check out
+（3）修改代码
+（4）Host编译
+（5）Target原始编译(不带lr和metro参数)
+（6）获取补丁文件（需要区分ccm或者ccm2版本）M:\xiaozhod_144_enb_lr151_int_Server\ccase_enodeb\callp\build_callp\geneccm2\out\libcallpcrm.so.stripped
+（7）上传补丁至网站http://135.251.227.165/database/webfile/patch.php
+（8）邮件置知会
+ 
+【查看代码本地差异】
+视图中找到activity，右击选择属性，单击Change Set标签，右击选择Compare with pre...
+ 
+
+ [YF1]主stream的名字
+ [YF2]我的view的名字
