@@ -1,0 +1,78 @@
+Deliver Process
+1. 建立steam
+ct mkstream –in enb_lr15_callp_CR@/enba_pvob –baseline baselinename hkliu_enb_lr15_callp_CR@/enba_pvob
+2. 建立view
+cd /nfs/tools/tddtools
+./MakeDynViewOnServerForTDD
+3. 进入view
+ct setview hkliu_hkliu_enb_lr15_callp_CR_Server
+4. 建立activity
+ct mkact
+5. Checkout相关代码并修改
+ct co –nc
+6. 编译前准备工作（第一次建view或者rebase后，需要执行此步骤）
+cd /ccase_delivery/delivery/ss/lte/enodeb/tools/
+./enb_cs_external -add all
+ct setcs –stream
+ct lsprivate -do -other |xargs rm –rf（清除私有文件）
+7. 编译代码
+cd /ccase_enodeb/callp/test/platform/
+./cpt_compile
+8. 跑regression测试
+./cpt_test –fdd
+./cpt_test –tdd
+9. Checkin修改的代码
+ct ci-nc –cact
+10. 关联activity和CR
+uts link activity-name CRI
+若改的是产品代码，则执行：
+uts codeinspection inspect activity-name
+uts codeinspection ready_to_submit activity-name
+若是PROP CR或改的不是产品代码，则执行：
+uts codeinspection exempt activity-name
+11. 跑beforeRebase的QR
+cd /home/callphudson/bin/deliverQR
+./deliverQR.pl qr=<模版> reset(第一次运行不需要此步骤)
+./deliverQR.pl qr=<模版>
+./deliverQR.pl r (在第二台服务器上反跑程序，加快运行速度)
+./deliverQR.pl w=<模板> wl (观察QR运行状态)
+12. Rebase代码
+ct rebase –rec
+13. 编译代码并跑regression测试
+cd /ccase_enodeb/callp/test/platform/
+./cpt_compile
+./cpt_test –fdd
+./cpt_test –tdd
+14. 完成rebase
+ct rebase –complete
+15. 跑afterRebase的QR
+cd /home/callphudson/bin/deliverQR
+./deliverQR.pl qr=<模版> reset
+./deliverQR.pl qr=<模版>
+./deliverQR.pl r (在第二台服务器上反跑程序，加快运行速度)
+16. 下载QR记录
+17. 提交代码
+ct deliver
+查询deliver状态可使用如下的语句：
+uts autodeliver –status –wait –transcript
+18. 登录远程服务器
+135.238.161.24
+host address 135.238.161.24
+user name:asbcallp
+password:asb#1234
+19. 建立view
+   ct mkview -stream enb_lr15_callp_CR@/enba_pvob -tag hkliu_enb_lr15_callp_CR_delivery -host 135.238.161.24 -gpath /views_store/hkliu_enb_lr15_callp_CR_delivery.vws -hpath /views_store/hkliu_enb_lr15_callp_CR_delivery.vws  /views_store/hkliu_enb_lr15_callp_CR_delivery.vws
+20. 建baseline
+   ct setview hkliu_enb_lr15_callp_CR_delivery
+   cct_mkbl LR151
+21. 将QR_beforeRebase、QR_afterRebase的结果分别打包与code review的连接一起上传到livelink上
+22. 给整个team发邮件
+ 
+一些常用命令
+查看谁在使用服务器：ps -ef |grep cpt
+查看baseline：ct lsstream -l
+查看view：ct lsview |grep hkliu
+跑case命令选项：-tdd/fdd -stub_pal/stub_wal2 -log all/failed_scenario -verbosity all -stress 30 -select/-last -purify_trace/-purify_notrace
+查看代码是谁改的：cct_find_predecessors /ccase_enodeb/callp/uecallp/uecall/src/uecall_pcmd.cc '<codes>' 
+查看checkout：ct lsact –l
+取消deliver：登录远程服务器，ct deliver -cancel -stream your_sub_stream @/enba_pvob （-status可查询deliver的状态）
