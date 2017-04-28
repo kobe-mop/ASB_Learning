@@ -1,0 +1,71 @@
+Sourcing MoTUS' .(tcsh/csh)rc ...
+Sourcing /opt/swe/tools/in/environ-4.3.4/cshrc.motus
+Sourcing /opt/swe/prof/asb_shanghai/enodeb/linux/.cshrc
+Sourcing /home/shengxiz/.csh_aliases
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cd /nfs/tools/FDD/
+bin/         cmake-2.6.3/ eclipse/     mutt.tar     mutt/
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cd /nfs/tools/FDD/bin/
+MakeDynViewForALL*          MakeDynViewForP4*
+MakeDynViewForALL_Sharing*  MakeDynViewForRADIO*
+MakeDynViewForDuplicatName* TBD/
+MakeDynViewForFDD*          cct_mkbl@
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> cd /nfs/tools/FDD/bin/
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> ./MakeDynViewForFDD
+ 
+ 
+ 
+WARNING:
+1.TDD CallP Team will use the script to create local view.The stript will to cre
+ate view on Server.
+2.By default, your view will be created that only you can read/write this view,
+others can only read.if you change the default permission, you will take the ris
+k of losing view private data.
+3.Whatever problem you meet, don't operate the view storage in file system. oter
+wise you will take the rish of losing data.
+4.The view name consists of , so pls input your stream carefully any wrong input
+ will take NO effect.
+5.When you meet something ERROR in this Stript create a ticket on http://wlsweb.
+cn.alcatel-lucent.com/sdeticket/add.php?category=Clearcase
+ 
+6.Please control your Server Views numbers in consideration of Server abiliy.
+7.The Server view 's number is limited for every developer(2/per person). Please
+ control your server view numbers.
+ 
+thanks a lot to Rong.Sheng@alcatel-sbell.com.cn(TDD).
+ 
+Are you agree this? [y/n]: y
+ 
+please input your 'stream' name: enb_lr15_integration
+creating view shengxiz_enb_lr15_integration_Server ......
+cleartool: Warning: Storage pathname "/net/sbardwf6/vol/cc_stg_2014/Views/shengx
+iz" may not reside on host "sbardw9c".
+Created view.
+Host-local path: sbardw9c:/net/sbardwf6/vol/cc_stg_2014/Views/shengxiz/shengxiz_                                            enb_lr15_integration_Server.vws
+Global path:     /net/sbardwf6/vol/cc_stg_2014/Views/shengxiz/shengxiz_enb_lr15_                                            integration_Server.vws
+It has the following rights:
+User : shengxiz : rwx
+Group: cc_rdr_tdd : r-x
+Other:          : r-x
+Attached view to stream "enb_lr15_integration".
+#################importing the view to windows####################
+###################the view has been imported successfully###############
+###########Your View is : ###############################################
+ 
+shengxiz_enb_lr15_integration_Server
+ 
+#########################################################################
+shengxiz(asb_shanghai/enodeb/linux)@lablte233> ct setview shengxiz_enb_lr15_inte                                            gration_Server
+Sourcing MoTUS' .(tcsh/csh)rc ...
+Sourcing /opt/swe/tools/in/environ-4.3.4/cshrc.motus
+Sourcing /opt/swe/prof/asb_shanghai/enodeb/linux/.cshrc
+Sourcing /home/shengxiz/.csh_aliases
+View:** shengxiz_enb_lr15_integration_Server **>cd /ccase_enodeb/callp/
+View:** shengxiz_enb_lr15_integration_Server **>cd /ccase_enodeb/if_enodeb/
+View:** shengxiz_enb_lr15_integration_Server **>ls
+callp  ce_sim  enodeb   itfl1l2_light_radio  lut    mupf  oamctrl  pltf  sloam  utils
+ce     dwl     itfblayer1_2  layer1_2   modem  oam   pal      pq3   upa    wddi
+View:** shengxiz_enb_lr15_integration_Server **> cd /ccase_enodeb/callp/
+View:** shengxiz_enb_lr15_integration_Server **>ls
+asn1 callp_services  callpbrc  callpcrm  callpmce  callpsctp  callpubm   cellinfo  if_callp  rrmdb  tools
+build_callp  callpbbrc       callpcom  callpdim  callpmgr  callptmg   cellcallp  export    pmla      test   uecallp
+View:** shengxiz_enb_lr15_integration_Server **>
