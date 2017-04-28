@@ -1,0 +1,255 @@
+Steps:
+1. 根据load号查出baseline -- https://lte-enodeb-ldb.fr.alcatel-lucent.com:8443/v2/web/index#/list-load
+2. 根据baseline找出对应的stream：ct lsbl –l
+3. 创建指定baseline的子stream
+4. 创建view
+5. 创建activity：ct mkact
+6. 修改代码
+7. Host编译，跑regression
+8. Target编译，提供patch。(放到指定的ftp server)
+9. Patch ok之后，创建code review。（这个CR的fix比较清楚，可以不用等verify结果）
+10. 跑full的QR，准备deliver。（./testPlan -all_qr）
+11. Deliver. 
+12. Make baseline
+13. 上传QR到指定的link
+14. 发送mail
+ 
+ 
+用命令在特定的baseline上创建自己的子stream
+ ct mkstream -in uts_test1_integration@/lte_test_pvob(父stream) -baseline baselinename（指定的baseline） lushen_uts_test_int@/lte_test_pvob（子stream） 
+ 
+ 
+第一次编译程序时要输入：
+/ccase_delivery/delivery/ss/lte/enodeb/tools/enb_cs_external -add all（第一次编译时用的消息）
+以后编译时用的消息
+ cd /enodeb_callp_pltf/pltf/platform（在这个目录下）
+./cpt_compile 
+ 
+跑regression  的命令：
+./cpt_test -fdd -regression 
+./cpt_test –tdd –regression 
+ 
+在该文件的路径下使用：
+>ct co -nc -unres <file_name> 
+可以将文件check out 出来
+ 
+单独跑一个case的命令：
+./cpt_test -bbrc -fdd -select -stop_all -verbosity full -log all -dir /local/.../unstable_case
+ 
+生成的pitch放在：
+/enodeb_callp_tools/tools/build_callp/geneccm2/out 中寻找libuecallp so.stripped 文件
+把它上传到指定的文件夹下。
+ 
+请先compile一个target的patch提供给tester去验证。然后继续fix UT case。
+提供patch方法：
+1. 先和tester确认用的load是macro或metro或soc，编译对应的包
+2. 从/ccase_enodeb/callp/build_callp/gen…/out/目录下去取对应的.so.stripped文件(根据你改的文件是哪个模块的)
+3. 把patch上传到server
+	a) 如果是TDD测试，上传到http://135.251.227.165/database/webfile/patch.php
+	b) 如果是FDD测试，上传到172.26.105.202       （需要先在http://172.26.105.202/申请一个账户）。可以在/Callp/LR15.1/创建一个目录，名字按照wk1529.4_load number_CRI#
+ 
+ 
+ 
+· create new code review
+ 
+ct  setview  <your_view>
+ccollab  set  scm  clearcase
+ccollab  set  collab __http://collab.web.alcatel-lucent.com:8081/ jinboc
+ 
+cct_act_diff <UCM-activity> --review --filtertype product-code
+ 
+· update code review
+ccollab addactivity --diffintegration <created_reviewid>  <one_of_your_activities>
+
+
+里面的ad4要改成你自己的
+jinboc->your ad4
+ 
+跑全部的QR：
+cd /ccase_enodeb/callp/test/platform/
+./testPlan -all_qr
+ 
+创建code review的话，要先link dwo
+命令: uts link activity CRI
+ 
+ 
+ 
+ 
+ 
+ 
+6 code review(改完代码就可以做):
+设置环境：
+ccollab set scm clearcase
+ccollab set collab http://mobility.ih.lucent.com:8081/yabz
+
+创建codereview：
+cct_act_diff enb15_yabz_alu_shanghai_jq.1 --review --filtertype product-code
+上传完，登录到Code Collaborate，加上合适的人做reviewer/moderator（Caijinbai or WangQilong）
+https://collab.web.alcatel-lucent.com:8181/ui
+ 
+ 
+./cpt_test -bbrc –fdd -select -purify_trace -log all
+ 
+ 
+-fdd -bbrc -purify_notrace -purecov -stub_wa
+l2 -dir PLAN_fbpupu_wal2
+ 
+./cpt_test –bbrc –fdd –select -fdd -bbrc -purify_notrace -purecov -stub_wa
+l2
+ 
+ 
+ 
+跑purify:
+./cpt_test -tdd -bbrc -purify_notrace -purecov -regression 
+./cpt_test -fdd -bbrc -purify_notrace -purecov -stub_pal -regression  
+./cpt_test -fdd -bbrc -purify_notrace -purecov -stub_wal2 -regression 
+ 
+ 
+做rebase的命令：
+ct rebase -recomm –gmerge 
+ct rebase –complete 
+ 
+ 
+跑full 的QR的命令：（before rebase）
+在 cd /ccase_enodeb/callp/test/platform/
+执行：
+./testPlan  –all_qr 
+ 
+After rebase 时跑命令：
+在 cd /ccase_enodeb/callp/test/platform/
+执行：
+./testPlan  -lite_qr
+ 
+Before rebase 里应该有的文件：
+1个Assert + 1 个ifdef +4个rebuild +1个coverity +6个regression+3个purify +4个result（churn and info）
+After rebase 里应该有的文件：
+After final rebase:
+./cpt_compile           
+./cpt_compile -target    
+./cpt_compile -lr -target
+./cpt_compile -metro -target
+ 
+./cpt_test -fdd -bbrc -regression
+./cpt_test -tdd -bbrc -regression
+./cpt_test -fdd -bbrc -stub_wal2 -regression
+./cpt_test -tdd -bbrc -stub_wal2 -regression
+./cpt_test -fdd -bbrc -stub_pal -regression
+./cpt_test -tdd -bbrc -stub_pal -regression
+ 
+ 
+你是要查询foundation的baseline吗？
+cleartool lsstream -fmt "%[found_bls]Xp\n" 
+可以用这个
+ 
+清理环境变量，如果编译没有过的话，执行：
+cleartool lsprivate -do -other | xargs rm –rf
+ 
+ 
+ 
+可以查看自己修改的代码，并且查看相关的activity
+ct lsco -cview –avobs
+ 
+codereview 的命令：
+设置code review 的环境：
+ccollab  set  scm  clearcase
+ccollab set collab http://collab.web.alcatel-lucent.com:8081 qiongdz
+ccollab login
+cct_act_diff enb15_qiongdz_alu_shanghai_jq.4 --review --filtertype product-code
+ 
+ 
+cct_act_diff --filter /enodeb_callp_com/crm/crm/src/crm_ci.cc --review_update 486388;
+用这个命令把心文件传上去就可以了
+中间的文件和id换成你的
+ 
+程序出错时，去这个目录下找它的错误：
+/local/qiongdz/qiongdz_qiongdz_lr15_callp_patch1_CR215_Server/PLAN_macro_coverity_compilation
+ 
+单跑程序命令：
+./cpt_compile -coverity-commit-comp uecallp   
+ 
+UtraEdit 的注册码：
+ \\sbardwf7\swe\Software\UltraeditV15
+-bbrc -fdd -select -purify_trace -log all
+ 
+清空环境变量：
+cleartool lsprivate -do -other | xargs rm –rf
+ 
+ 
+然后在远程机器上打baseline
+>ssh asbcallp@139.54.98.47
+
+PW:asb#1234
+
+列出asbcallp的stream：
+>ct lsview | grep 15 | grep asbcallp
+
+
+>ct setview asbcallp_enb_lr15_callp_CR_delivery
+>cct_mkbl LR151 
+
+
+ 
+./cpt_compile           
+./cpt_compile -target    
+./cpt_compile -lr -target
+./cpt_compile -metro -target
+ 
+./cpt_compile -coverity-commit 
+ 
+./cpt_test -fdd -bbrc -regression
+./cpt_test -tdd -bbrc -regression
+./cpt_test -fdd -bbrc -stub_wal2 -regression
+./cpt_test -tdd -bbrc -stub_wal2 -regression
+./cpt_test -fdd -bbrc -stub_pal -regression
+./cpt_test -tdd -bbrc -stub_pal -regression
+ 
+./cpt_test -tdd -bbrc -purify_notrace -purecov -regression 
+./cpt_test -fdd -bbrc -purify_notrace -purecov -stub_pal -regression  
+./cpt_test -fdd -bbrc -purify_notrace -purecov -stub_wal2 -regression 
+ 
+./cpt_count_callp_assert.sh
+./cpt_count_ifdef_metro.sh
+ 
+cct_act_diff --info /tmp/result --filteract_invert 'rebase.'
+ 
+After final rebase:
+./cpt_compile           
+./cpt_compile -target    
+./cpt_compile -lr -target
+./cpt_compile -metro -target
+ 
+./cpt_test -fdd -bbrc -regression
+./cpt_test -tdd -bbrc -regression
+./cpt_test -fdd -bbrc -stub_wal2 -regression
+./cpt_test -tdd -bbrc -stub_wal2 -regression
+./cpt_test -fdd -bbrc -stub_pal -regression
+./cpt_test -tdd -bbrc -stub_pal -regression
+ 
+ 
+ 
+单独编译跑模块：
+/enodeb_callp_tools/tools/build_callp/genhost
+make help
+make callpcrm
+make scen
+ 
+ 
+codereview 完成后 用哪个命令去重新更新跑QR时关于codereview的文件？:)
+CAI Jinbai 13:37
+cct_act_diff --info /tmp/result --filteract_invert 'rebase.' 
+ 
+ 
+ 
+你这个不需要再重启了
+sudo reboot -f
+cd /home/callphudson/bin/deliverQR
+./vlink
+./valias
+译码upos的trace:
+在目录enodeb_callp_tools/tools/tools/msgmap/src下：
+./msgmap CPI_BrcUeCtxSetupResp_t -endian little
+view:** qiongdz_qiongdz_enb_lr15_callp_CR_Server **>./msgmap CPI_BrcUeCtxSetupResp_t -endian little
+ 
+ 
+打出编译信息的结果：
+./cpt_compile | tee result.txt
