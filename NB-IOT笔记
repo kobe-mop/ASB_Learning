@@ -1,0 +1,47 @@
+1. 子载波间隔：15kHz(15*12=180kHz) 3.75kHz(15*48=180kHz)
+
+2. SRB0/SRB1/SRB1bis
+
+3. 三种工作状态如下：
+Connected(连接态)：
+模块注册入网后处于该状态，可以发送和接收数据，无数据交互超过一段时间后会进入Idle模式，时间可配置。
+Idle(空闲态)：
+可收发数据，且接收下行数据会进入Connected状态，无数据交互超过一段时会进入PSM模式，时间可配置。
+PSM(节能模式)：
+此模式下终端关闭收发信号机，不监听无线侧的寻呼，因此虽然依旧注册在网络，但信令不可达，无法收到下行数据，功率很小。
+持续时间由核心网配置(T3412)，有上行数据需要传输或TAU周期结束时会进入Connected态。
+
+NB-IoT三种工作状态一般情况的转换过程可以总结如下：
+①    终端发送数据完毕处于Connected态，启动“不活动计时器，“不活动计时器”超时，终端释放RRC连接后进入Idle态。
+②    进入IDLE态后，启动定时器(Active-Timer【T3324】)，T3324超时，终端进入PSM状态。
+③    进入PSM态后，启动定时器(TAU周期【T3412】)，T3412超时后，终端进入Connected态。
+
+“不活动计时器”，默认20秒，可配置范围为1s~3600s
+T3324超时时间配置范围为2秒~186分钟
+T3412配置范围为54分钟~310小时。
+
+4.信道
+DL: NPBCH(MIB-NB), NPDCCH, NPDSCH(SIB1-NB周期性出现)  调制方式QPSK
+UL: NPRACH,NPUSCH(format1传数据，format2传UCI,类似pucch)
+RS: NRS(DL信道质量估计),DMRS(UL信道估计)， NPSS(周期10ms,与LTE不同，不携带任何小区信息), NSSS(周期20ms,携带PCI)
+
+5.部署方式
+独立部署（180khz,在GSM 200khz中部署，两边10khz保护间隔）
+保护带部署(LTE边缘保护频带部署)
+带内部署(LTE载波中任意的RB中部署)
+
+6.SIB-NB1/2/3/4/5/14/16
+SIB1:小区选择
+SIB2:无线资源分配
+SIB3:小区重选
+SIB4:同频邻区信息
+SIB5：异频邻区信息
+SIb14:access barring信息
+SIB16:GPS/世界标准时间
+
+7.NB-iot 不支持HO，先释放RRC连接，再重选目标小区
+
+8. 载波聚合
+Anchor Carrier (PBCH，NPSS,NSSS，msg1)
+Non-Anchor Carrier(其他流程,msg2....)
+一个UE只能在一个载波上传送数据，不允许同时在Anchor Carrier和Non-Anchor Carrier传输数据
