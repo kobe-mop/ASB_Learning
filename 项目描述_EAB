@@ -14,6 +14,37 @@ Type 2) is usually done by various SIB settings. Again in Type 2), a couple of d
 
 
 < LTE SIB14 >
+-- ASN1START
+SystemInformationBlockType14-r11 ::=	SEQUENCE {
+	eab-Param-r11							CHOICE {
+		eab-Common-r11				       EAB-Config-r11,
+		eab-PerPLMN-List-r11					SEQUENCE (SIZE (1..maxPLMN-r11)) OF EAB-ConfigPLMN-r11
+	}										      OPTIONAL, -- Need OR
+}
+
+EAB-ConfigPLMN-r11 ::=				SEQUENCE {
+	eab-Config-r11						EAB-Config-r11	OPTIONAL -- Need OR}
+
+EAB-Config-r11 ::=					SEQUENCE {
+	eab-Category-r11					ENUMERATED {a, b, c},
+	eab-BarringBitmap-r11				BIT STRING (SIZE (10))
+}
+-- ASN1STOP
+
+
+eab-BarringBitmap
+Extended access class barring for AC 0-9. The first/ leftmost bit is for AC 0, the second bit is for AC 1, and so on.
+eab-Category
+Indicates the category of UEs for which EAB applies. Value a corresponds to all UEs, value b corresponds to the UEs that are neither in 
+their HPLMN nor in a PLMN that is equivalent to it, and value c corresponds to the UEs that are neither in the PLMN listed as most 
+preferred PLMN of the country where the UEs are roaming in the operator-defined PLMN selector list on the USIM, nor in their HPLMN nor 
+in a PLMN that is equivalent to their HPLMN, see TS 22.011 [10].
+eab-Common
+The EAB parameters applicable for all PLMN(s).
+eab-PerPLMN-List
+The EAB parameters per PLMN, listed in the same order as the PLMN(s) occur in plmn-IdentityList in SystemInformationBlockType1.
+
+
 BCCH-DL-SCH-Message
     message: c1 (0)
         c1: systemInformation (0)
