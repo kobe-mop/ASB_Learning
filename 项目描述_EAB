@@ -1,0 +1,66 @@
+This feature 172647 - Enhanced Access Barring for Machine Type Communication, supports Enhanced Access Barring (EAB) in SIB14. 
+This enable eNB to restrict access from UEs configured for EAB, especially, in case a large number of MTC UEs try connecting to eNB.
+
+How does a UE knows which Access Control Class it belongs to ? It is specified in EF_ACC field in USIM
+
+There are several different ways for Access Control, but in terms of overall logic we can think of two different mechanism as listed below.
+Type 1) Accept initial request from UE but Network send Reject message
+Type 2) Prevent UE from trying initial access itself. (This type is called 'Barring')
+       Case 1 : Bar every UE from any type of access even for emergency call (Configured by SIB1)
+       Case 2 : Bar only specific UE (with specific marking in USIM) from a specific services (Configured by SIB2)
+
+Type 1) is usually done by RRC Connection Reject in case of RRC layer, Attach Reject in case of NAS layer.
+Type 2) is usually done by various SIB settings. Again in Type 2), a couple of different ways has been evolved as cellular technology evolves.
+
+
+< LTE SIB14 >
+BCCH-DL-SCH-Message
+    message: c1 (0)
+        c1: systemInformation (0)
+            systemInformation
+                criticalExtensions: systemInformation-r8 (0)
+                    systemInformation-r8
+                        sib-TypeAndInfo: 1 item
+                            Item 0
+                                sib-TypeAndInfo item: sib14-v1130 (12)
+                                    sib14-v1130
+                                        eab-Param-r11: eab-Common-r11 (0)
+                                            eab-Common-r11
+                                                eab-Category-r11: a (0)
+                                                eab-BarringBitmap-r11: 0000000000
+
+ 
+< LTE Paging >
+PCCH-Message
+    message: c1 (0)
+        c1: paging (0)
+            paging
+                nonCriticalExtension
+                    lateNonCriticalExtension: <MISSING>
+                    nonCriticalExtension
+                        nonCriticalExtension
+                            eab-ParamModification-r11: true (0)
+                            
+             
+             
+5.3.3.12	EAB check
+The UE shall:
+1>	if SystemInformationBlockType14 is present and includes the eab-Param:
+   2>	if the eab-Common is included in the eab-Param:
+       3>	if the UE belongs to the category of UEs as indicated in the eab-Category contained in eab-Common; and
+       3>	if for the Access Class of the UE, as stored on the USIM and with a value in the range 0..9, the corresponding bit in the eab-BarringBitmap contained in eab-Common is set to one:
+            4>	consider access to the cell as barred;
+       3>	else:
+           4>	consider access to the cell as not barred due to EAB;
+   2>	else (the eab-PerPLMN-List is included in the eab-Param):
+       3>	select the entry in the eab-PerPLMN-List corresponding to the PLMN selected by upper layers (see TS 23.122 [11], TS 24.301 [35]);
+       3>	if the eab-Config for that PLMN is included:
+           4>	if the UE belongs to the category of UEs as indicated in the eab-Category contained in eab-Config; and
+           4>	if for the Access Class of the UE, as stored on the USIM and with a value in the range 0..9, the corresponding bit in the eab-BarringBitmap contained in eab-Config is set to one:
+                5>	consider access to the cell as barred;
+           4>	else:
+                5>	consider access to the cell as not barred due to EAB;
+      3>	else:
+           4>	consider access to the cell as not barred due to EAB;
+1>	else:
+    2>	consider access to the cell as not barred due to EAB;
