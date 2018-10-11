@@ -1,0 +1,6 @@
+If the MAC PDU includes only the MAC CE for padding BSR or periodic BSR with zero MAC SDUs and there is no aperiodic CSI requested for this TTI [2], the MAC entity shall not generate a MAC PDU for the HARQ entity in the following cases:
+-    in case the MAC entity is configured with skipUplinkTxDynamic and the grant indicated to the HARQ entity was addressed to a C-RNTI; or
+-    in case the MAC entity is configured with skipUplinkTxSPS and the grant indicated to the HARQ entity is a configured uplink grant;
+
+DCI at 367/6 with apCQI request, UE shall send PUSCH at 368/2
+DCI at 367/9 with no apCQI request, there was padding BSR in MAC CE, UE will skip pusch at 368/3.
