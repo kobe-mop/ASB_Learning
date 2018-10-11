@@ -1,0 +1,76 @@
+log analysis framework:基于python的自动化日志分析框架，针对某些特定的问题提取有效的日志信息
+
+整体流程：
+1.指定configuration.ini 文件中log的路径，相应的scenar函数和L/T/G area.
+2.LAF根据configuration文件里面的scenario设置，调用APEX将所需要的log packet从log中提取出来，将其转化成LAF能够处理的格式
+3. 然后调用各个Scenario对log中的错误因子进行提取和处理。
+4. 最后输出到.laf中。
+
+LAF的框架：
+
+from GenericStateMachine import State
+from Scenarios import Scenario
+from globals import getLogFilePath
+
+#==================================================================================================================
+#1.定义Scenario
+#==================================================================================================================
+class TestScenario(Scenario):
+#==================================================================================================================
+#4.定义状态机
+#==================================================================================================================
+  __on = State("Start")
+  __got_eventD06D_RxD = State("RxD Log packet")
+ 
+#==================================================================================================================
+#5.定义状态机的跳转 
+#==================================================================================================================
+  __on.addTransition(lambda log: log.getLogID() == 0xD06D,__got_eventD06D_RxD)
+  __got_eventD06D_RxD.addTransition(lambda log: log.getLogID() == 0xD06D, __got_eventD06D_RxD)
+ 
+#==================================================================================================================
+#6.为状态机加操作
+#==================================================================================================================
+  def __got_eventD06D_RxD_action(self,log) :
+    self.RxD_state = int(log.get("rxd_state"))
+    self.RxDPM_state = int(log.get("rxdpm_state"))
+    self.ARD_state = int(log.get("ard_state"))
+    self.RDDS_state = int(log.get("rdds_state"))
+    if self.ARD_state != 0:
+      self.ARD_states[self.ARD_state] += 1
+    elif self.ARD_state == 0 and self.RDDS_state == 1:
+      self.ARD_states[0] += 1
+    elif self.ARD_state == 0 and self.RxD_state == 1 and self.RDDS_state == 0 and self.RxDPM_state == 0:
+      self.Idle_RxD[1] += 1 
+    elif self.ARD_state == 0 and self.RxD_state == 0:
+      self.Idle_RxD[0] += 1 
+  __got_eventD06D_RxD.setAction(__got_eventD06D_RxD_action)
+
+  
+#==================================================================================================================
+# 7.输出
+#==================================================================================================================
+  def printStats(self):   
+    if self.Idle_RxD[0] or self.Idle_RxD[1]:
+      if self.Idle_RxD[0]+self.Idle_RxD[1] != 0:
+        self.logger.stats("Percentage of time RxD is Off in TDS IDLE: %.2f %%"%(100*self.Idle_RxD[0]/(self.Idle_RxD[0]+self.Idle_RxD[1])))
+        self.logger.stats("Percentage of time RxD is On in TDS IDLE:: %.2f %%"%(100*self.Idle_RxD[1]/(self.Idle_RxD[0]+self.Idle_RxD[1])))
+      else:
+        self.logger.stats("Percentage of time RxD is Off in TDS IDLE:invalid")
+        self.logger.stats("Percentage of time RxD is Off in TDS IDLE:invalid")
+
+#==================================================================================================================
+# 3.初始化scenario
+#==================================================================================================================
+  def __init__(self):
+    super(TestScenario, self).__init__(TestScenario.__on, "TDS_RxD_analysis")
+    self.registerLogCode(0xD06D)
+    self.registerLogCode(0xD0E3)
+    self.setStatistics()
+    
+#==================================================================================================================
+# 2.LAF框架注册scenario
+#==================================================================================================================
+from Scenarios import ScenariosInit
+ScenariosInit.registerScenario(TestScenario)
+
