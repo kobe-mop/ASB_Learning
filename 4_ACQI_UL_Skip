@@ -1,3 +1,8 @@
+UE attaches to the cell and completes RRC connection setup procedure. RRC:RRCConnectionSetup->radioResourceConfigDedicated->
+mac-MainConfig sent by eNB does not contain skipUplinkTx-r14 IE
+eNB sends RRC:RRCConnectionReconfiguration message to UE with radioResourceConfigDedicated->mac-MainConfig->skipUplinkTx-r14-setup->
+skipUplinkTxDynamic-r14 IE included
+
 If the MAC PDU includes only the MAC CE for padding BSR or periodic BSR with zero MAC SDUs and there is no aperiodic CSI requested for this TTI [2], the MAC entity shall not generate a MAC PDU for the HARQ entity in the following cases:
 -    in case the MAC entity is configured with skipUplinkTxDynamic and the grant indicated to the HARQ entity was addressed to a C-RNTI; or
 -    in case the MAC entity is configured with skipUplinkTxSPS and the grant indicated to the HARQ entity is a configured uplink grant;
